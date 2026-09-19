@@ -52,6 +52,18 @@ docs/               decisions.md, benchmarks.md, licenses.md, electron-plan.md
 | `pnpm lint` / `pnpm typecheck` / `pnpm format` | Code quality                                    |
 | `pnpm check:no-remote`                         | Fails if shipped code references any remote URL |
 
+## CI
+
+The workflow is at [`ci/ci.yml`](ci/ci.yml), not `.github/workflows/`, because the
+automation that created this branch lacks GitHub's `workflows` permission. Enable
+it with:
+
+```bash
+mkdir -p .github/workflows && git mv ci/ci.yml .github/workflows/ci.yml
+```
+
+See [`ci/README.md`](ci/README.md) for what it runs.
+
 ## Non-negotiables
 
 These are enforced by tests and CI, not convention:

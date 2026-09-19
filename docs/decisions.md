@@ -310,8 +310,8 @@ they carry no authority and must be deleted or confirmed once real numbers exist
 - **Skeletons.** `coco17` is fully correct (it is what the 2D candidates output).
   `h36m17` has the correct canonical joint order and hierarchy but no COCO→H36M
   remap yet (Document 2). `wholebody133` is a stub pending the RTMW decision.
-  `targetHumanoid` is a placeholder hierarchy; bone lengths, rest pose, and axis
-  conventions are deliberately unspecified until retargeting lands.
+  `targetHumanoid` was a placeholder here in Document 1; it is finalized in
+  Document 2 below (21 joints, T-pose, Y-up) now that retargeting has landed.
 - **Manifest `acquired` flag.** Added to the spec'd schema. Candidates must be
   listable (so the bench can show what still needs fetching) before their files
   exist, but a _missing_ checksum must never be confusable with a _verified_ one.
@@ -321,3 +321,99 @@ they carry no authority and must be deleted or confirmed once real numbers exist
   Document 3, not Cache API work.
 - **`allowedHosts: true`** in both Vite configs so the app is reachable from
   sandboxed/remote preview hostnames. Harmless for a local-only dev tool.
+
+---
+
+# Document 2 — live mocap
+
+## Target rig conventions
+
+**Y-up, right-handed, matching Three.js.** `+X` is the character's *left*, the
+character faces `-Z`, and all internal lengths are metres. These four statements
+bind the retargeter, the rig view, the BVH exporter, and (later) glTF export. They
+are asserted in `packages/skeleton/src/targetHumanoid.test.ts` and mirrored in
+`crates/mocap-core/src/skeleton.rs`, so the TS and Rust rigs cannot silently drift.
+
+**Rest pose is a T-pose**, not an A-pose. Two reasons:
+
+1. It is what Blender, Unity, and Unreal all assume for humanoid retargeting, so an
+   exported BVH drops in without a rest-pose correction step.
+2. Every arm bone's rest direction becomes exactly `±X` and every leg bone exactly
+   `-Y`. That makes swing-rotation unit tests trivially checkable by hand — a
+   90° elbow bend is a literal 90° in the assertion, not an angle relative to some
+   arbitrary A-pose offset. The T-pose test in `retarget/mod.rs` ("T-pose in →
+   identity rotations out") only works because of this.
+
+The cost is that a T-pose's straight-down-the-side shoulder is a slightly less
+natural bind pose for deformation quality. Irrelevant here: we export motion, not
+skinned meshes.
+
+**`parents[i] < i`, root parent `-1`.** Topological order is enforced by test. The
+Rust retargeter, `forward_kinematics`, and the BVH writer all rely on it to do a
+single forward pass with no recursion and no sorting.
+
+**Non-Y-up sources are corrected exactly once**, at the retarget boundary, via
+`SourceConvention` (`YUp` / `YDown` / `ZUp`). Nothing downstream of `canonicalize`
+is allowed to know that a model emitted Z-up data. Axis bugs that leak past this
+boundary are unfindable; keeping the conversion in one named function means there
+is exactly one place to look.
+
+### Joint order (21)
+
+`Hips, Spine, Spine1, Neck, Head, LeftShoulder, LeftArm, LeftForeArm, LeftHand,
+RightShoulder, RightArm, RightForeArm, RightHand, LeftUpLeg, LeftLeg, LeftFoot,
+LeftToeBase, RightUpLeg, RightLeg, RightFoot, RightToeBase`, with parents
+`[-1,0,1,2,3,2,5,6,7,2,9,10,11,0,13,14,15,0,17,18,19]` and a rest head height of
+≈1.54 m.
+
+**Breaking change from Document 1:** `Chest` was renamed `Spine1`. The Document 1
+name had no consumers beyond the placeholder skeleton; `Spine1` is the Mixamo /
+Blender-Rigify convention and survives a BVH round-trip into those tools without a
+bone-name mapping table.
+
+## BVH exporter
+
+**Channel order is `Zrotation Xrotation Yrotation`** (root additionally prefixed by
+`Xposition Yposition Zposition`). ZXY is what Biovision emitted and what Blender's
+importer assumes. BVH applies channels in the order they are *listed*, so a local
+rotation is `Rz * Rx * Ry`; `quat_to_zxy_euler` inverts precisely that composition
+and a round-trip test proves it, including the gimbal-lock branch at `X = ±90°`.
+
+**MOTION values follow depth-first hierarchy order, not joint-index order.** For
+the current skeleton these happen to coincide, and a test asserts it — but the
+writer goes through `hierarchy_order()` anyway so that adding a joint mid-array
+cannot silently scramble every exported clip.
+
+**The root's HIERARCHY `OFFSET` is zero.** `RetargetedFrame::root_pos` is an
+absolute world position (the hip centre) and `forward_kinematics` likewise ignores
+`REST_OFFSETS[0]` for the root, so emitting the rest offset in *both* the hierarchy
+and the position channels would float the whole rig off the ground.
+
+**Default output unit is centimetres** (`BvhUnits::Centimeters`), because that is
+what Blender's BVH importer expects at scale 1.0. Only position channels and rest
+offsets are scaled; rotations never are.
+
+Leaf joints (Head, both hands, both toes) get an `End Site` extending 10 cm along
+their own rest direction, which BVH requires to give the final bone a length.
+
+## `WMOC` v1 binary pose format
+
+Magic `0x574D4F43`, little-endian, **header exactly 18 bytes** and deliberately
+unpadded — every offset is computed explicitly by both sides rather than inferred
+from struct layout, so the Rust reader can never disagree with the TS writer about
+alignment.
+
+The **writer is TypeScript and the reader is Rust.** This inverts the usual "hot
+code in Rust" rule and is a deliberate marshalling exemption: the recorder is
+already in JS-land holding the pose objects, and shipping every frame across the
+WASM boundary purely to serialize it would cost more than the write saves. Parity
+is pinned by `apps/web/tests/unit/poseFormat.test.ts` encoding a take that the Rust
+`parse_pose_take` tests decode byte-identically.
+
+## Ring buffers
+
+Header is a 4-slot `Int32Array`: `[0] writeIndex`, `[1] slotCount`, `[2] frameIndex
+of latest write`, `[3] reserved`. Single writer, single reader, `Atomics` for the
+index publish — no locks, and a reader that falls behind drops frames rather than
+stalling the producer, which is the correct trade for live preview. Frame ring 4–6
+slots, pose ring 3, rig ring 3.

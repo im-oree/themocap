@@ -14,6 +14,12 @@ models the rest of the project uses.
 
 ## Quick start
 
+> **Use pnpm, not npm.** This is a pnpm workspace (`pnpm-workspace.yaml`). npm
+> and yarn do not read that file, so `npm install` installs only the root
+> dependencies, leaves `apps/*` and `packages/*` empty, and then fails with
+> `sh: vite: command not found`. A `preinstall` hook blocks this, but if you hit
+> it already: `rm -rf node_modules package-lock.json && pnpm install`.
+
 ```bash
 corepack enable && corepack prepare pnpm@9.15.4 --activate
 curl https://sh.rustup.rs -sSf | sh -s -- -y

@@ -19,7 +19,8 @@
     "e2e": "pnpm --filter @wms/web e2e",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "postinstall": "node scripts/copy-ort-assets.mjs"
+    "postinstall": "node scripts/copy-ort-assets.mjs",
+    "preinstall": "node scripts/check-package-manager.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.14.10",

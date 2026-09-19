@@ -19,3 +19,8 @@ playwright-report/
 .env.local
 fixtures/*.mp4
 tools/bench/public/fixtures/
+
+# npm/yarn lockfiles: this is a pnpm workspace (see scripts/check-package-manager.mjs).
+# A stray lockfile here means someone ran the wrong package manager.
+package-lock.json
+yarn.lock

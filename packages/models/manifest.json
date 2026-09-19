@@ -1,0 +1,452 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-09-19",
+  "models": [
+    {
+      "id": "rtmdet-nano-fp32",
+      "displayName": "RTMDet-nano (fp32)",
+      "task": "person-detector",
+      "stage": "bench-candidate",
+      "precision": "fp32",
+      "file": "/models/rtmdet-nano-fp32.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 320, 320],
+      "outputNames": ["dets", "labels"],
+      "preprocessing": {
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmdetection",
+        "ref": "v3.3.0",
+        "sourceUrl": "https://github.com/open-mmlab/mmdetection/tree/main/configs/rtmdet",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Person class only; 320x320 is the live-path detector resolution."
+    },
+    {
+      "id": "rtmdet-nano-fp16",
+      "displayName": "RTMDet-nano (fp16)",
+      "task": "person-detector",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/rtmdet-nano-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 320, 320],
+      "outputNames": ["dets", "labels"],
+      "preprocessing": {
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmdetection",
+        "ref": "v3.3.0",
+        "sourceUrl": "https://github.com/open-mmlab/mmdetection/tree/main/configs/rtmdet",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Person class only; 320x320 is the live-path detector resolution."
+    },
+    {
+      "id": "rtmdet-nano-int8",
+      "displayName": "RTMDet-nano (int8)",
+      "task": "person-detector",
+      "stage": "bench-candidate",
+      "precision": "int8",
+      "file": "/models/rtmdet-nano-int8.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 320, 320],
+      "outputNames": ["dets", "labels"],
+      "preprocessing": {
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmdetection",
+        "ref": "v3.3.0",
+        "sourceUrl": "https://github.com/open-mmlab/mmdetection/tree/main/configs/rtmdet",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Person class only; 320x320 is the live-path detector resolution."
+    },
+    {
+      "id": "yolox-tiny-fp16",
+      "displayName": "YOLOX-tiny (fp16)",
+      "task": "person-detector",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/yolox-tiny-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "images",
+      "inputShape": [1, 3, 416, 416],
+      "outputNames": ["output"],
+      "preprocessing": {
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "Megvii-BaseDetection/YOLOX",
+        "ref": "0.3.0",
+        "sourceUrl": "https://github.com/Megvii-BaseDetection/YOLOX",
+        "exportMethod": "Published ONNX export script tools/export_onnx.py",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Detector fallback if RTMDet-nano underperforms."
+    },
+    {
+      "id": "rtmpose-tiny-fp16",
+      "displayName": "RTMPose-tiny (fp16)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/rtmpose-tiny-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 256, 192],
+      "outputNames": ["simcc_x", "simcc_y"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmpose",
+        "ref": "v1.3.2",
+        "sourceUrl": "https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Live-path 2D pose candidate. SimCC head decodes to COCO-17."
+    },
+    {
+      "id": "rtmpose-tiny-int8",
+      "displayName": "RTMPose-tiny (int8)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "int8",
+      "file": "/models/rtmpose-tiny-int8.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 256, 192],
+      "outputNames": ["simcc_x", "simcc_y"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmpose",
+        "ref": "v1.3.2",
+        "sourceUrl": "https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Live-path 2D pose candidate. SimCC head decodes to COCO-17."
+    },
+    {
+      "id": "rtmpose-m-fp16",
+      "displayName": "RTMPose-m (fp16)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/rtmpose-m-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 256, 192],
+      "outputNames": ["simcc_x", "simcc_y"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmpose",
+        "ref": "v1.3.2",
+        "sourceUrl": "https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Middle option between tiny (live) and l (refine)."
+    },
+    {
+      "id": "rtmpose-l-fp16",
+      "displayName": "RTMPose-l (fp16)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/rtmpose-l-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 384, 288],
+      "outputNames": ["simcc_x", "simcc_y"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmpose",
+        "ref": "v1.3.2",
+        "sourceUrl": "https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Refine-path 2D pose candidate."
+    },
+    {
+      "id": "vitpose-b-fp16",
+      "displayName": "ViTPose-B (fp16)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/vitpose-b-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 256, 192],
+      "outputNames": ["heatmaps"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "ViTAE-Transformer/ViTPose",
+        "ref": "main",
+        "sourceUrl": "https://github.com/ViTAE-Transformer/ViTPose",
+        "exportMethod": "MMPose ViTPose config -> MMDeploy ONNX export",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Refine-path accuracy ceiling; memory risk on 8GB."
+    },
+    {
+      "id": "rtmw-x-fp16",
+      "displayName": "RTMW-x whole-body (fp16)",
+      "task": "pose-2d",
+      "stage": "deferred",
+      "precision": "fp16",
+      "file": "/models/rtmw-x-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 3, 384, 288],
+      "outputNames": ["simcc_x", "simcc_y"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "open-mmlab/mmpose",
+        "ref": "v1.3.2",
+        "sourceUrl": "https://github.com/open-mmlab/mmpose/tree/main/projects/rtmpose",
+        "exportMethod": "MMDeploy tools/deploy.py ONNX export (see docs/decisions.md > Model acquisition)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "133-keypoint whole body. Deferred: hands/face out of scope until a later document."
+    },
+    {
+      "id": "blazepose-lite-fp16",
+      "displayName": "MediaPipe BlazePose Lite (fp16)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/blazepose-lite-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input_1",
+      "inputShape": [1, 256, 256, 3],
+      "outputNames": ["Identity", "Identity_1"],
+      "preprocessing": {
+        "layout": "nhwc",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "google-ai-edge/mediapipe",
+        "ref": "v0.10.14",
+        "sourceUrl": "https://developers.google.com/mediapipe/solutions/vision/pose_landmarker",
+        "exportMethod": "TFLite -> ONNX via tf2onnx (bundled locally, no CDN)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Bundled locally; also provides 3D world landmarks (see blazepose-3d-world)."
+    },
+    {
+      "id": "motionbert-lite-fp16",
+      "displayName": "MotionBERT Lite (fp16)",
+      "task": "lift-3d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/motionbert-lite-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [1, 243, 17, 3],
+      "outputNames": ["output"],
+      "provenance": {
+        "repo": "Walter0807/MotionBERT",
+        "ref": "main",
+        "sourceUrl": "https://github.com/Walter0807/MotionBERT",
+        "exportMethod": "torch.onnx.export from the released lite checkpoint (243-frame window)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Temporal 3D lift; 243-frame receptive field drives the refine path."
+    },
+    {
+      "id": "blazepose-3d-world-fp16",
+      "displayName": "BlazePose 3D world landmarks (fp16)",
+      "task": "lift-3d",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/blazepose-3d-world-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input_1",
+      "inputShape": [1, 256, 256, 3],
+      "outputNames": ["Identity_4"],
+      "preprocessing": {
+        "layout": "nhwc",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "google-ai-edge/mediapipe",
+        "ref": "v0.10.14",
+        "sourceUrl": "https://developers.google.com/mediapipe/solutions/vision/pose_landmarker",
+        "exportMethod": "TFLite -> ONNX via tf2onnx (world-landmark output head)",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Single-frame 3D world landmarks; the low-latency live-path lift candidate."
+    },
+    {
+      "id": "depth-anything-v2-small-fp16",
+      "displayName": "Depth Anything V2 Small (fp16)",
+      "task": "depth",
+      "stage": "bench-candidate",
+      "precision": "fp16",
+      "file": "/models/depth-anything-v2-small-fp16.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "image",
+      "inputShape": [1, 3, 518, 518],
+      "outputNames": ["depth"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "DepthAnything/Depth-Anything-V2",
+        "ref": "main",
+        "sourceUrl": "https://github.com/DepthAnything/Depth-Anything-V2",
+        "exportMethod": "Published ONNX export (Small variant) \u2014 license verified as Apache-2.0 for the Small model only",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Depth support signal for Document 5. Only the Small variant is Apache-2.0; Base/Large are CC-BY-NC-4.0 and are excluded."
+    },
+    {
+      "id": "depth-anything-v2-small-int8",
+      "displayName": "Depth Anything V2 Small (int8)",
+      "task": "depth",
+      "stage": "bench-candidate",
+      "precision": "int8",
+      "file": "/models/depth-anything-v2-small-int8.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "image",
+      "inputShape": [1, 3, 518, 518],
+      "outputNames": ["depth"],
+      "preprocessing": {
+        "mean": [123.675, 116.28, 103.53],
+        "std": [58.395, 57.12, 57.375],
+        "layout": "nchw",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "DepthAnything/Depth-Anything-V2",
+        "ref": "main",
+        "sourceUrl": "https://github.com/DepthAnything/Depth-Anything-V2",
+        "exportMethod": "Published ONNX export (Small variant) \u2014 license verified as Apache-2.0 for the Small model only",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Depth support signal for Document 5. Only the Small variant is Apache-2.0; Base/Large are CC-BY-NC-4.0 and are excluded."
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+[workspace]
+members = ["crates/mocap-core"]
+resolver = "2"

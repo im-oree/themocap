@@ -1,0 +1,21 @@
+node_modules/
+dist/
+dist-ssr/
+target/
+.turbo/
+coverage/
+*.log
+.DS_Store
+.vite/
+packages/mocap-core-wasm/pkg/
+# ORT binaries are copied out of node_modules by scripts/copy-ort-assets.mjs
+# on postinstall — generated artifacts, never committed.
+apps/web/public/ort/
+tools/bench/public/ort/
+apps/web/public/models/
+tools/bench/public/models/
+test-results/
+playwright-report/
+.env.local
+fixtures/*.mp4
+tools/bench/public/fixtures/

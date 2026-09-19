@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Web Mocap Studio">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#3396FF"/>
+      <stop offset="1" stop-color="#0A84FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="114" fill="url(#g)"/>
+  <g fill="none" stroke="#FFFFFF" stroke-width="22" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="256" cy="150" r="34" fill="#FFFFFF" stroke="none"/>
+    <path d="M256 190v104"/>
+    <path d="M176 232h160"/>
+    <path d="M256 294l-52 96"/>
+    <path d="M256 294l52 96"/>
+  </g>
+</svg>

@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "types": [] },
+  "include": ["src", "tailwind.preset.ts", "tailwind.config.ts"]
+}

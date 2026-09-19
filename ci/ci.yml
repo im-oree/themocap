@@ -1,0 +1,144 @@
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  rust:
+    name: Rust (fmt, clippy, test, wasm build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+          components: rustfmt, clippy
+
+      - name: Cache cargo + target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', '**/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+      - run: cargo test --workspace
+
+      - name: Install wasm-pack
+        uses: taiki-e/install-action@v2
+        with:
+          tool: wasm-pack
+
+      - name: Build mocap-core to WASM
+        run: node scripts/build-wasm.mjs
+
+      - name: Upload wasm artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: mocap-core-wasm
+          path: packages/mocap-core-wasm/pkg
+          retention-days: 7
+
+  node:
+    name: Node (lint, typecheck, unit tests, build)
+    runs-on: ubuntu-latest
+    needs: rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The WASM bridge test is a hard gate; it needs the real artifact.
+      - name: Download wasm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mocap-core-wasm
+          path: packages/mocap-core-wasm/pkg
+
+      - run: pnpm lint
+      - run: pnpm format:check
+      - run: pnpm typecheck
+
+      - name: Unit tests (WASM bridge required)
+        run: pnpm -r test
+        env:
+          WMS_REQUIRE_WASM: '1'
+
+      - run: pnpm build
+
+      - name: No remote URLs in shipped code
+        run: pnpm check:no-remote
+
+  e2e:
+    name: Playwright smoke (dev + preview)
+    runs-on: ubuntu-latest
+    needs: rust
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Download wasm artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: mocap-core-wasm
+          path: packages/mocap-core-wasm/pkg
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install Playwright browsers
+        run: pnpm --filter @wms/web exec playwright install --with-deps chromium
+
+      # Acceptance gate §12.4: crossOriginIsolated must hold on BOTH servers.
+      - name: E2E against dev server
+        run: pnpm --filter @wms/web e2e
+
+      - name: E2E against preview build
+        run: pnpm --filter @wms/web e2e
+        env:
+          WMS_E2E_TARGET: preview
+
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report
+          retention-days: 7

@@ -1,0 +1,63 @@
+/* Locally bundled Inter (OFL). SF Pro is never bundled — it resolves natively
+   through -apple-system on Apple platforms. No remote font requests, ever. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-surface-light text-content-light-primary antialiased;
+    @apply dark:bg-surface-dark dark:text-content-dark-primary;
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Visible focus for every interactive element — desktop creative tool, no exceptions. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2;
+    @apply ring-offset-surface-light dark:ring-offset-surface-dark;
+  }
+
+  ::selection {
+    @apply bg-accent/30;
+  }
+}
+
+@layer utilities {
+  .app-region-drag {
+    -webkit-app-region: drag;
+  }
+
+  .app-region-no-drag {
+    -webkit-app-region: no-drag;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

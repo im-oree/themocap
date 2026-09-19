@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["vite/client", "vitest/globals"]
+  },
+  "include": [
+    "src",
+    "tests",
+    "vite.config.ts",
+    "playwright.config.ts",
+    "postcss.config.js",
+    "tailwind.config.ts"
+  ]
+}

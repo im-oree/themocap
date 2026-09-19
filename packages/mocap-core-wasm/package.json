@@ -1,0 +1,25 @@
+{
+  "name": "@wms/mocap-core-wasm",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Workspace wrapper around the wasm-pack output of crates/mocap-core.",
+  "main": "./index.js",
+  "module": "./index.js",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "pkg"
+  ],
+  "scripts": {
+    "build": "node ../../scripts/build-wasm.mjs",
+    "test": "echo \"(no tests in wrapper package)\""
+  }
+}

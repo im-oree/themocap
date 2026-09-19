@@ -1,0 +1,7 @@
+# Static-host header config (Netlify/Cloudflare Pages syntax).
+# These two headers are REQUIRED: without cross-origin isolation there is no
+# SharedArrayBuffer, and therefore no threaded WASM inference.
+/*
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Resource-Policy: same-origin

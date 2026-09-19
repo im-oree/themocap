@@ -19,13 +19,26 @@ import {
   Square,
   WifiOff,
 } from 'lucide-react';
-import { Badge, IconButton, ThemeToggle, Tooltip, cn } from '@wms/ui';
+import { useCallback, useRef, useState } from 'react';
+import {
+  Badge,
+  ContextMenu,
+  IconButton,
+  ThemeToggle,
+  Tooltip,
+  cn,
+  toast,
+  useContextMenu,
+  type MenuItemSpec,
+} from '@wms/ui';
 
 import type { PanelTypeId } from '../dock/layoutDefaults';
 import type { DockController } from '@wms/ui';
 import { useEditorStore } from '../state/useEditorStore';
 import { formatElapsed, useLiveStore } from '../state/useLiveStore';
 import { useAppStore } from '../state/useAppStore';
+import { listCameras, CaptureError } from '../features/capture/mediaSource';
+import { closeSource, selectCamera, selectVideoFile } from '../features/capture/sourceController';
 
 /**
  * The shared `IconButton` is sized for touch (44px). A 44px control does not fit
@@ -50,6 +63,67 @@ export function AppToolbar({ dock }: AppToolbarProps) {
   const hasSource = source.kind !== 'none';
   const isRecording = recording.status === 'recording';
 
+  const sourceMenu = useContextMenu();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [opening, setOpening] = useState(false);
+
+  /** Surfaces a capture failure as its actionable message, not a raw DOMException. */
+  const reportCaptureError = useCallback((cause: unknown) => {
+    const error =
+      cause instanceof CaptureError
+        ? cause
+        : new CaptureError(cause instanceof Error ? cause.message : String(cause), 'unknown');
+    toast({ title: 'Could not open source', description: error.message, tone: 'danger' });
+    if (error.code === 'permission-denied') {
+      useLiveStore.getState().setCameraPermission('denied');
+    }
+  }, []);
+
+  /**
+   * Builds the camera menu at click time.
+   *
+   * Device labels are withheld by the platform until permission has been
+   * granted once, so the list is enumerated on every open rather than cached —
+   * the names improve after the first successful use.
+   */
+  const openCameraMenu = useCallback(
+    async (event: { clientX: number; clientY: number; preventDefault: () => void }) => {
+      setOpening(true);
+      try {
+        const cameras = await listCameras();
+        const items: MenuItemSpec[] =
+          cameras.length === 0
+            ? [{ kind: 'item', id: 'none', label: 'No cameras found', disabled: true }]
+            : cameras.map((camera) => ({
+                kind: 'item',
+                id: camera.deviceId || camera.label,
+                label: camera.label,
+                onSelect: () => {
+                  void selectCamera({ deviceId: camera.deviceId || undefined })
+                    .then(() => dock.focus('videoMonitor'))
+                    .catch(reportCaptureError);
+                },
+              }));
+
+        if (hasSource) {
+          items.push({ kind: 'separator', id: 'sep' });
+          items.push({
+            kind: 'item',
+            id: 'close',
+            label: 'Close Source',
+            onSelect: () => closeSource(),
+          });
+        }
+        sourceMenu.open(event, items);
+      } catch (cause) {
+        reportCaptureError(cause);
+      } finally {
+        setOpening(false);
+      }
+    },
+    [dock, hasSource, reportCaptureError, sourceMenu],
+  );
+
   const toggleRecording = () => {
     if (isRecording) setRecording({ status: 'saving' });
     else setRecording({ status: 'recording', startedAt: performance.now(), elapsedSeconds: 0 });
@@ -67,7 +141,8 @@ export function AppToolbar({ dock }: AppToolbarProps) {
             label="Use camera"
             className={COMPACT}
             active={source.kind === 'camera'}
-            onClick={() => dock.focus('videoMonitor')}
+            disabled={opening}
+            onClick={(event) => void openCameraMenu(event)}
             icon={<Camera size={16} strokeWidth={1.75} />}
           />
         </Tooltip>
@@ -76,10 +151,31 @@ export function AppToolbar({ dock }: AppToolbarProps) {
             label="Open video file"
             className={COMPACT}
             active={source.kind === 'file'}
-            onClick={() => dock.focus('videoMonitor')}
+            onClick={() => fileInputRef.current?.click()}
             icon={<Film size={16} strokeWidth={1.75} />}
           />
         </Tooltip>
+        {/*
+          A hidden input is the only way to open a file picker: the modern
+          showOpenFilePicker is not available in Safari or Firefox, and this
+          path works everywhere without a capability check.
+        */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="video/*,.webm,.mp4,.mov,.m4v"
+          className="hidden"
+          data-testid="video-file-input"
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            // Reset so picking the same file twice in a row still fires change.
+            event.target.value = '';
+            if (!file) return;
+            void selectVideoFile(file)
+              .then(() => dock.focus('videoMonitor'))
+              .catch(reportCaptureError);
+          }}
+        />
         <span className="ml-1 max-w-[180px] truncate text-[12px] text-content-light-secondary dark:text-content-dark-secondary">
           {hasSource ? source.label : 'No source'}
         </span>
@@ -153,6 +249,8 @@ export function AppToolbar({ dock }: AppToolbarProps) {
       {offlineReadiness === 'incomplete' && <Badge tone="warning">Offline incomplete</Badge>}
 
       <ThemeToggle />
+
+      <ContextMenu state={sourceMenu.state} onClose={sourceMenu.close} />
 
       <Tooltip content="Preferences">
         <IconButton

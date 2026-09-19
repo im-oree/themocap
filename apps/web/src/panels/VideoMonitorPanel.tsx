@@ -15,6 +15,8 @@ import { useEffect, useRef, useState } from 'react';
 import { cn } from '@wms/ui';
 
 import { useLiveStore } from '../state/useLiveStore';
+import { subscribeToSource } from '../features/capture/sourceController';
+import type { AcquiredSource } from '../features/capture/mediaSource';
 
 export function VideoMonitorPanel() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -25,6 +27,61 @@ export function VideoMonitorPanel() {
   const source = useLiveStore((s) => s.source);
   const frameIndex = useLiveStore((s) => s.frameIndex);
   const permission = useLiveStore((s) => s.cameraPermission);
+  const playing = useLiveStore((s) => s.playing);
+
+  /**
+   * Attaches the acquired source to the element.
+   *
+   * The stream is taken from the source controller rather than the store: a
+   * MediaStream in a React store outlives the hardware it points at, and a
+   * stale one renders a black frame with no error. Subscribing here means the
+   * element always reflects the *currently owned* source.
+   */
+  useEffect(() => {
+    return subscribeToSource((acquired: AcquiredSource | null) => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      if (!acquired) {
+        video.srcObject = null;
+        video.removeAttribute('src');
+        video.load();
+        return;
+      }
+
+      if (acquired.stream) {
+        video.srcObject = acquired.stream;
+        video.removeAttribute('src');
+      } else if (acquired.objectUrl) {
+        video.srcObject = null;
+        video.src = acquired.objectUrl;
+      }
+
+      // A camera preview is live and should start immediately; a file waits for
+      // the transport so opening one does not surprise the user with playback.
+      if (acquired.kind === 'camera') {
+        void video.play().catch(() => undefined);
+      }
+    });
+    // The <video> is remounted whenever hasSource flips, so re-attach then.
+  }, [source.kind]);
+
+  /**
+   * Transport control, for **file sources only**.
+   *
+   * A live camera preview must never be paused by the transport. Applying it to
+   * cameras was a real bug: `playing` starts false, so this effect ran straight
+   * after the stream was attached and froze the preview on a black frame, which
+   * looked exactly like a camera that had failed to open. For a live stream
+   * there is nothing to pause — the frames keep arriving regardless — so Play
+   * and Stop only mean something for a file.
+   */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || source.kind !== 'file') return;
+    if (playing) void video.play().catch(() => undefined);
+    else video.pause();
+  }, [playing, source.kind]);
 
   // Keep the overlay exactly on top of the letterboxed video rect.
   useEffect(() => {

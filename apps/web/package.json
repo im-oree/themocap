@@ -17,6 +17,7 @@
     "@wms/mocap-core-wasm": "workspace:*",
     "@wms/models": "workspace:*",
     "@wms/skeleton": "workspace:*",
+    "@wms/take-model": "workspace:^",
     "@wms/ui": "workspace:*",
     "dockview-core": "8.3.1",
     "lucide-react": "0.47",

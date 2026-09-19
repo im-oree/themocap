@@ -7,15 +7,21 @@
  * what a take is.
  */
 
+import { withTakeSettingsDefaults, type TakeSettings } from '@wms/take-model';
+
 import {
   KEYPOINTS_FILE,
   PROJECTS_DIR,
+  projectDir,
   projectManifestPath,
+  REFINED_FILE,
   slugify,
   takeDir,
   takeIdFor,
   takeKeypointsPath,
   takeManifestPath,
+  takeRefinedPath,
+  takeRefinedTmpPath,
   takesDir,
   takeVideoPath,
   uniqueSlug,
@@ -165,6 +171,15 @@ export class WorkspaceManager {
     return this.provider.readFile(takeKeypointsPath(projectId, takeId));
   }
 
+  /** Reads the take's recorded video bytes. */
+  async readTakeVideo(projectId: string, takeId: string): Promise<Uint8Array> {
+    const path = takeVideoPath(projectId, takeId);
+    if (!(await this.provider.exists(path))) {
+      throw new WorkspaceError(`No video for take ${takeId}`, 'not-found');
+    }
+    return this.provider.readFile(path);
+  }
+
   /** Opens a streaming writer for the take's video. */
   createVideoWriter(projectId: string, takeId: string) {
     return this.provider.createWriter(takeVideoPath(projectId, takeId));
@@ -225,5 +240,127 @@ export class WorkspaceManager {
       }
     }
     return problems;
+  }
+
+  // ---- Document 3 §6.1: metadata mutation ----
+
+  /**
+   * Renames a project's display name.
+   *
+   * The folder id is deliberately left alone. `fsa` supports real directory
+   * renames but `opfs` and `idb-fallback` effectively do not, and a rename that
+   * behaves differently per tier would be a rich source of path-rewrite bugs.
+   * Ids are stable and opaque; names are a metadata field.
+   */
+  async renameProject(projectId: string, name: string): Promise<ProjectManifest> {
+    const manifest = await this.readProject(projectId);
+    const next: ProjectManifest = { ...manifest, name, updatedAt: new Date().toISOString() };
+    await this.provider.writeText(
+      projectManifestPath(projectId),
+      `${JSON.stringify(next, null, 2)}\n`,
+    );
+    return next;
+  }
+
+  /** Deletes a project and every take inside it. */
+  async deleteProject(projectId: string): Promise<void> {
+    await this.provider.remove(projectDir(projectId));
+  }
+
+  /** Renames a take's display name. Id-stable, for the reasons above. */
+  async renameTake(projectId: string, takeId: string, name: string): Promise<TakeManifest> {
+    const manifest = await this.readTake(projectId, takeId);
+    const next: TakeManifest = { ...manifest, name, updatedAt: new Date().toISOString() };
+    await this.writeTakeManifest(next);
+    return next;
+  }
+
+  /** Persists take settings (subject height, refine config) into `take.json`. */
+  async updateTakeSettings(
+    projectId: string,
+    takeId: string,
+    settings: TakeSettings,
+  ): Promise<TakeManifest> {
+    const manifest = await this.readTake(projectId, takeId);
+    const next: TakeManifest = { ...manifest, settings, updatedAt: new Date().toISOString() };
+    await this.writeTakeManifest(next);
+    return next;
+  }
+
+  /** Reads a take's settings, defaulted for takes recorded before they existed. */
+  async readTakeSettings(projectId: string, takeId: string): Promise<TakeSettings> {
+    const manifest = await this.readTake(projectId, takeId);
+    return withTakeSettingsDefaults(manifest.settings);
+  }
+
+  private async writeTakeManifest(manifest: TakeManifest): Promise<void> {
+    await this.provider.writeText(
+      takeManifestPath(manifest.projectId, manifest.id),
+      `${JSON.stringify(manifest, null, 2)}\n`,
+    );
+  }
+
+  // ---- Document 3 §8.3: refined-track storage ----
+
+  async hasRefined(projectId: string, takeId: string): Promise<boolean> {
+    return this.provider.exists(takeRefinedPath(projectId, takeId));
+  }
+
+  async readTakeRefined(projectId: string, takeId: string): Promise<Uint8Array> {
+    const path = takeRefinedPath(projectId, takeId);
+    if (!(await this.provider.exists(path))) {
+      throw new WorkspaceError(`No refined data for take ${takeId}`, 'not-found');
+    }
+    return this.provider.readFile(path);
+  }
+
+  /**
+   * Writes refined output using the write-temp-then-promote pattern (§8.3).
+   *
+   * The ordering is the whole point and is load-bearing:
+   *
+   *   1. write `refined.bin.tmp` in full,
+   *   2. promote it to `refined.bin`,
+   *   3. only then update `take.json` to advertise it.
+   *
+   * A crash before (3) leaves a manifest that still says "no refined data", so
+   * the raw track stays the only thing the app trusts. A crash during (1)
+   * leaves only a `.tmp` file, which `cleanupRefineTemp` removes. At no point
+   * can `take.json` reference a half-written file.
+   */
+  async writeTakeRefined(
+    projectId: string,
+    takeId: string,
+    bytes: Uint8Array,
+  ): Promise<TakeManifest> {
+    const tmpPath = takeRefinedTmpPath(projectId, takeId);
+    const finalPath = takeRefinedPath(projectId, takeId);
+
+    await this.provider.writeFile(tmpPath, bytes);
+
+    // No provider offers an atomic cross-tier rename, so promote by copy then
+    // delete. The copy targets the final path, which take.json does not yet
+    // reference, so a failure here still leaves the manifest honest.
+    const written = await this.provider.readFile(tmpPath);
+    await this.provider.writeFile(finalPath, written);
+    await this.provider.remove(tmpPath).catch(() => undefined);
+
+    const manifest = await this.readTake(projectId, takeId);
+    const next: TakeManifest = {
+      ...manifest,
+      files: { ...manifest.files, refined: REFINED_FILE },
+      refinedAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    await this.writeTakeManifest(next);
+    return next;
+  }
+
+  /** Removes a stranded `.tmp` from a cancelled or crashed refine run. */
+  async cleanupRefineTemp(projectId: string, takeId: string): Promise<void> {
+    const tmpPath = takeRefinedTmpPath(projectId, takeId);
+    if (await this.provider.exists(tmpPath)) {
+      await this.provider.remove(tmpPath);
+    }
   }
 }

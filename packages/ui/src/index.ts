@@ -64,3 +64,9 @@ export {
 } from './dock/layoutPersistence';
 export { useDockApi, type DockController } from './dock/useDockApi';
 export { Spinner, type SpinnerProps } from './components/Spinner';
+export {
+  Dialog,
+  PromptDialog,
+  type DialogProps,
+  type PromptDialogProps,
+} from './components/Dialog';

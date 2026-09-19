@@ -514,3 +514,93 @@ Two consequences shaped the shell:
 The navigation gizmo is drawn as a **scissored second pass in the same GL
 context** rather than as a second renderer, for the same reason: WebGL contexts
 are a scarce per-page resource and browsers evict the oldest when the limit is hit.
+
+## Document 3 — take storage and stored playback
+
+### Rename is metadata-only, at every tier
+
+`renameProject` and `renameTake` rewrite the `name` field inside `project.json`
+and `take.json` and never touch the directory name.
+
+The `fsa` tier could do a real directory rename; `opfs` and `idb-fallback`
+effectively cannot. Emulating one on the other means copying every byte of a
+take — a multi-hundred-megabyte operation to change a label — and a rename that
+behaves differently per tier would be an endless source of path-rewrite bugs.
+Ids are slugs assigned at creation and are opaque thereafter; names are display
+metadata. Tests pin this: after a rename, `listTakeIds` returns the original id.
+
+### `RefineJobState` is never persisted
+
+A job is a running process, not a property of a take. Restoring a half-finished
+job from disk after a reload would be a lie, because the worker driving it is
+gone. Reloading mid-refine therefore loses the job and the user re-runs it,
+which is safe because the pipeline is idempotent and never mutates `raw`.
+
+### Refined writes are staged, and the manifest is updated last
+
+`writeTakeRefined` writes `refined.bin.tmp`, promotes it to `refined.bin`, and
+only then rewrites `take.json` to reference it. A crash at any point leaves a
+manifest that still says "no refined data", so the app keeps trusting the raw
+track. `cleanupRefineTemp` removes stranded `.tmp` files from cancelled runs.
+
+No provider offers an atomic cross-tier rename, so promotion is copy-then-delete
+rather than a true rename. The ordering above is what provides the atomicity
+guarantee, not the filesystem.
+
+### Playback stores poses as flat typed arrays
+
+A `PoseTrack` is a struct of `Float32Array`/`Float64Array`, not an array of
+per-frame objects. A 60s take at 30fps with 17 joints is ~30k keypoints; as
+objects that is tens of thousands of allocations for the GC to walk during
+playback. Flat arrays make per-frame access a pointer offset and let a whole
+track be transferred to a worker with zero copying.
+
+`useCurrentPose` returns a **stable view mutated in place**, not a fresh object
+per frame, for the same reason — at 60fps, allocating per frame is thousands of
+garbage objects a second. Consumers read the view immediately and never retain
+it. A test asserts buffer identity across reads so this cannot regress.
+
+### One pose-read path, two backends
+
+Every consumer — viewport, 2D overlay, properties — reads poses through
+`useCurrentPose`. Behind it sit two unrelated backends: a lock-free ring buffer
+for live capture (where "current" means "newest") and array indexing for stored
+takes (where "current" means "the frame the transport is parked on"). Keeping
+the seam in one file is what lets Document 4 add timeline modes without touching
+Viewport internals.
+
+### Scrubbing derives from stored timestamps, never wall-clock or nominal fps
+
+**Achieved precision: exact (0 frames of error) at all 20 test seek positions,
+against a spec target of ±1 frame.**
+
+Real capture drops frames and drifts from its nominal rate, so `index / fps` is
+wrong — in the test fixture, by more than a full frame by the end of a 10-second
+clip. The pose track's recorded per-frame timestamps are the single source of
+truth: the video is seeked to a pose frame's timestamp, and after it settles the
+frame index is recomputed from the time the decoder actually reached.
+
+Two details are load-bearing:
+
+1. **Seek requests are biased a quarter-frame into the target frame's interval.**
+   A decoder displays the frame whose presentation interval contains
+   `currentTime`; asking for exactly a frame boundary lets float error tip onto
+   the previous frame.
+2. **Resolving a video time back to a frame is containment, not nearest-match.**
+   This was a real bug caught by the dropped-frame test: a decoder reports the
+   exact frame start timestamp, and nearest-match on that tie rounds *down*,
+   putting the viewport one frame behind the video at every discontinuity.
+
+The test's fake `<video>` deliberately reproduces decoder quantisation — it
+snaps to real frame boundaries and reports where it landed, not what was asked
+for. A fake that stored `currentTime` verbatim would pass trivially and prove
+nothing.
+
+### `window.confirm` is banned for destructive actions
+
+Native dialogs block the main thread, cannot be tested without stubbing a
+global, cannot show the context a delete needs ("this project contains 3
+takes"), and are suppressed by some browsers after repeated use — which would
+silently turn Delete into a no-op. `Dialog`/`PromptDialog` replace them, with
+explicit focus trapping, Escape handling and focus restore, each individually
+tested.

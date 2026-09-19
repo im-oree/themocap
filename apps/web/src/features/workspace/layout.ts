@@ -24,6 +24,8 @@
  * manually. Collisions are resolved with a numeric suffix at creation time.
  */
 
+import type { TakeSettings } from '@wms/take-model';
+
 export const WORKSPACE_VERSION = 1;
 
 export const WORKSPACE_FILE = 'workspace.json';
@@ -34,6 +36,16 @@ export const TAKE_FILE = 'take.json';
 export const VIDEO_FILE = 'video.webm';
 export const KEYPOINTS_FILE = 'raw-keypoints.bin';
 export const THUMBNAIL_FILE = 'thumbnail.jpg';
+/** Document 3 §12.7: the refine pass output, written beside the raw track. */
+export const REFINED_FILE = 'refined.bin';
+/**
+ * Staging name for the refine output (§8.3).
+ *
+ * The pipeline writes here first and only promotes to `refined.bin` after the
+ * whole write succeeds, so a crash mid-write can never leave `take.json`
+ * pointing at a truncated file.
+ */
+export const REFINED_TMP_FILE = 'refined.bin.tmp';
 
 export interface WorkspaceManifest {
   version: number;
@@ -80,7 +92,20 @@ export interface TakeManifest {
     video: string | null;
     keypoints: string | null;
     thumbnail: string | null;
+    /** Present only once a refine pass has completed (Document 3 §8.3). */
+    refined?: string | null;
   };
+  /**
+   * Take settings and refine configuration (Document 3 §4).
+   *
+   * Optional because Document 2 takes predate it; readers must go through
+   * `withTakeSettingsDefaults` rather than trusting this to be present.
+   */
+  settings?: TakeSettings;
+  /** Set when a refine pass has completed successfully. */
+  refinedAt?: string | null;
+  /** Last metadata change (rename, refine completion). */
+  updatedAt?: string;
   /**
    * Which joints had their twist estimated rather than measured. Surfaced in the
    * UI as the twist caveat and carried here so an exported take stays honest
@@ -103,6 +128,10 @@ export const takeKeypointsPath = (projectId: string, takeId: string) =>
   `${takeDir(projectId, takeId)}/${KEYPOINTS_FILE}`;
 export const takeThumbnailPath = (projectId: string, takeId: string) =>
   `${takeDir(projectId, takeId)}/${THUMBNAIL_FILE}`;
+export const takeRefinedPath = (projectId: string, takeId: string) =>
+  `${takeDir(projectId, takeId)}/${REFINED_FILE}`;
+export const takeRefinedTmpPath = (projectId: string, takeId: string) =>
+  `${takeDir(projectId, takeId)}/${REFINED_TMP_FILE}`;
 
 /**
  * Turns a display name into a filesystem-safe slug.

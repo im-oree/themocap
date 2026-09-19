@@ -1,49 +1,44 @@
 import { expect, test } from '@playwright/test';
 
-test.describe('app shell smoke', () => {
-  test('loads the shell with header, sidebar, main and status bar', async ({ page }) => {
+/**
+ * Rewritten for the editor shell (addendum §A.1). The previous version asserted
+ * a website-style header/sidebar/main layout, which no longer exists — the app
+ * is now a menu bar, a toolbar, a dock and a status bar.
+ */
+test.describe('editor shell', () => {
+  test('loads the menu bar, toolbar, dock and status bar', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Foundation ready' })).toBeVisible();
-    await expect(page.getByRole('navigation', { name: 'Primary' })).toBeVisible();
-    await expect(page.getByTestId('frame-counter')).toHaveText('Frames: —');
-    await expect(page.getByRole('radiogroup', { name: 'Color theme' })).toBeVisible();
+
+    await expect(page.getByRole('menubar')).toBeVisible();
+    await expect(page.getByTestId('app-toolbar')).toBeVisible();
+    await expect(page.getByTestId('status-bar')).toBeVisible();
+    await expect(page.getByTestId('workspace-tabs')).toBeVisible();
+
+    // The four default-open docked panels.
+    await expect(page.getByTestId('viewport-panel')).toBeVisible();
+    await expect(page.getByTestId('video-monitor-panel')).toBeVisible();
+    await expect(page.getByTestId('timeline-scrub')).toBeVisible();
+    await expect(page.getByTestId('workspace-tree').or(page.getByText('Choose where recordings are saved'))).toBeVisible();
   });
 
-  test('is cross-origin isolated (COOP/COEP active)', async ({ page }) => {
+  test('the Record button is present and disabled without a source', async ({ page }) => {
     await page.goto('/');
-    // Acceptance gate §12.4 — without this there is no SharedArrayBuffer.
-    await expect.poll(() => page.evaluate(() => window.crossOriginIsolated)).toBe(true);
-    await expect.poll(() => page.evaluate(() => typeof SharedArrayBuffer)).toBe('function');
+    const record = page.getByTestId('record-button');
+    await expect(record).toBeVisible();
+    await expect(record).toBeDisabled();
   });
 
-  test('diagnostics panel reports SIMD and isolation', async ({ page }) => {
+  test('the Edit workspace tab is visible but not selectable yet', async ({ page }) => {
     await page.goto('/');
-    const diagnostics = page.getByTestId('diagnostics');
-    await expect(diagnostics).toBeVisible();
-    await expect(diagnostics.getByText('crossOriginIsolated')).toBeVisible();
-    await expect(diagnostics.getByText('WASM SIMD')).toBeVisible();
-    await expect(diagnostics.getByText('WASM threads')).toBeVisible();
-
-    // SIMD must be detected in a modern Chromium.
-    const simdRow = diagnostics.locator('div', { hasText: /^WASM SIMD/ }).first();
-    await expect(simdRow).toContainText('Yes');
+    const edit = page.getByTestId('workspace-tab-edit');
+    await expect(edit).toBeVisible();
+    await expect(edit).toHaveAttribute('aria-disabled', 'true');
+    await expect(page.getByTestId('workspace-tab-live')).toHaveAttribute('aria-selected', 'true');
   });
 
-  test('collapses and expands the sidebar', async ({ page }) => {
+  test('opens Diagnostics from the status bar', async ({ page }) => {
     await page.goto('/');
-    const nav = page.getByRole('navigation', { name: 'Primary' });
-    await expect(nav).toHaveAttribute('data-collapsed', 'false');
-    await page.getByRole('button', { name: 'Collapse sidebar' }).click();
-    await expect(nav).toHaveAttribute('data-collapsed', 'true');
-    await page.getByRole('button', { name: 'Expand sidebar' }).click();
-    await expect(nav).toHaveAttribute('data-collapsed', 'false');
-  });
-
-  test('future sections are disabled with a coming-soon tooltip', async ({ page }) => {
-    await page.goto('/');
-    const live = page.getByRole('button', { name: 'Live' });
-    await expect(live).toBeDisabled();
-    await live.hover({ force: true });
-    await expect(page.getByRole('tooltip')).toContainText('Coming in Document');
+    await page.getByTestId('status-diagnostics').click();
+    await expect(page.getByText('Capabilities')).toBeVisible();
   });
 });

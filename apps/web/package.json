@@ -18,8 +18,11 @@
     "@wms/models": "workspace:*",
     "@wms/skeleton": "workspace:*",
     "@wms/ui": "workspace:*",
+    "dockview-core": "8.3.1",
+    "lucide-react": "0.47",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "three": "0.169.0",
     "zustand": "^4.5.4"
   },
   "devDependencies": {
@@ -30,6 +33,7 @@
     "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@types/three": "0.169.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
     "fake-indexeddb": "^6.2.5",

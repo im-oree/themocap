@@ -12,20 +12,28 @@
   },
   "scripts": {
     "build": "tsc --noEmit",
-    "test": "vitest run --passWithNoTests",
+    "test": "vitest run --config vitest.config.ts --passWithNoTests",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zustand": "^4.5.4",
-    "@fontsource/inter": "^5.0.20"
+    "@fontsource/inter": "^5.0.20",
+    "dockview-core": "8.3.1",
+    "dockview-react": "8.3.1",
+    "lucide-react": "0.47",
+    "zustand": "^4.5.4"
   },
   "peerDependencies": {
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "jsdom": "^24.1.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "tailwindcss": "^3.4.6",

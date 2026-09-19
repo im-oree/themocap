@@ -4,6 +4,11 @@
 @import '@fontsource/inter/500.css';
 @import '@fontsource/inter/600.css';
 
+/* Dockview's structural stylesheet, then our full reskin over the top. Order
+   matters: theme.css must win. We never load dockview's own theme classes. */
+@import 'dockview-react/dist/styles/dockview.css';
+@import './dock/theme.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

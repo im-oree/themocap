@@ -42,3 +42,34 @@ for (const Ctor of [globalThis.Blob, globalThis.File]) {
     };
   }
 }
+
+/**
+ * jsdom has no `ResizeObserver`. Both the docking system and the viewport depend
+ * on it, so without a stub neither can be mounted in a test at all. This is a
+ * no-op recorder rather than a real implementation: jsdom does no layout, so
+ * there are no resizes to observe — it exists purely so construction succeeds.
+ */
+if (!('ResizeObserver' in globalThis)) {
+  (globalThis as unknown as { ResizeObserver: unknown }).ResizeObserver = class {
+    observe(): void {}
+    unobserve(): void {}
+    disconnect(): void {}
+  };
+}
+
+/** Likewise absent in jsdom; dockview's floating groups probe for it. */
+if (!('matchMedia' in window)) {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: (query: string) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      addListener: () => {},
+      removeListener: () => {},
+      dispatchEvent: () => false,
+    }),
+  });
+}

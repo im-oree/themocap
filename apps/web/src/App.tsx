@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useThemeStore } from '@wms/ui';
-import { Shell } from './app/Shell';
+import { AppDock } from './dock/AppDock';
 import { registerServiceWorker } from './lib/registerSW';
 
 export function App() {
@@ -17,5 +17,5 @@ export function App() {
     void registerServiceWorker();
   }, []);
 
-  return <Shell />;
+  return <AppDock />;
 }

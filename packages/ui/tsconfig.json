@@ -1,5 +1,7 @@
 {
   "extends": "../../tsconfig.base.json",
-  "compilerOptions": { "types": [] },
-  "include": ["src", "tailwind.preset.ts", "tailwind.config.ts"]
+  "compilerOptions": {
+    "types": ["vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src", "tests", "tailwind.preset.ts", "tailwind.config.ts"]
 }

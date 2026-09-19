@@ -1,0 +1,210 @@
+/**
+ * Dockview reskin — maps every `--dv-*` variable onto our design tokens.
+ *
+ * The addendum (§A.2) is explicit that no library-default colour may be visible
+ * anywhere, so this file overrides the full variable surface rather than
+ * cherry-picking. Anything left unset would fall back to dockview's VS-Code-ish
+ * palette and read as "themed library default" instead of our shell.
+ *
+ * We deliberately do NOT import dockview's own `dockview.css` theme classes
+ * (`.dockview-theme-light` etc.). We import only its structural stylesheet and
+ * define `.wms-dock` ourselves, so there is exactly one source of colour truth.
+ *
+ * Token mapping, for reference:
+ *   surface-light        #F5F5F7   surface-dark            #000000
+ *   surface-light-elev   #FFFFFF   surface-dark-elevated   #1C1C1E
+ *   hairline-light   rgba(0,0,0,.08)   hairline-dark  rgba(255,255,255,.08)
+ *   accent               #0A84FF
+ */
+
+.wms-dock {
+  /* ---- geometry: Apple-ish soft radii, tighter than dockview's defaults ---- */
+  --dv-border-radius: 10px;
+  --dv-tab-border-radius: 8px;
+  --dv-sash-border-radius: 2px;
+  --dv-dropdown-border-radius: 10px;
+  --dv-tab-group-chip-border-radius: 5px;
+  --dv-spacing-padding: 6px;
+  --dv-tab-margin: 2px;
+  --dv-tab-margin-inline: 3px;
+  --dv-tab-margin-block: 4px;
+  --dv-tabs-and-actions-container-height: 34px;
+  --dv-tab-font-size: 12px;
+  --dv-tabs-and-actions-container-font-size: 12px;
+  --dv-tab-close-icon-size: 14px;
+  --dv-tab-group-chip-font-size: 10px;
+  --dv-tab-group-chip-padding: 1px 5px;
+  --dv-tab-group-line-height: 2px;
+  --dv-tab-group-line-opacity: 1;
+  --dv-floating-titlebar-height: 30px;
+  --dv-max-tab-rows: 3;
+  --dv-overlay-z-index: 40;
+
+  /* ---- motion: the design system's apple-out curve, not a linear fade ---- */
+  --dv-transition-duration: 180ms;
+  --dv-active-sash-transition-duration: 180ms;
+  --dv-active-sash-transition-delay: 60ms;
+
+  /* ---- light mode ---- */
+  --dv-group-view-background-color: #ffffff;
+  --dv-tabs-and-actions-container-background-color: #f5f5f7;
+
+  --dv-activegroup-visiblepanel-tab-background-color: #ffffff;
+  --dv-activegroup-visiblepanel-tab-color: #1d1d1f;
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-activegroup-hiddenpanel-tab-color: rgba(60, 60, 67, 0.6);
+  --dv-inactivegroup-visiblepanel-tab-background-color: rgba(255, 255, 255, 0.55);
+  --dv-inactivegroup-visiblepanel-tab-color: rgba(60, 60, 67, 0.6);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-hiddenpanel-tab-color: rgba(60, 60, 67, 0.45);
+
+  --dv-separator-border: rgba(0, 0, 0, 0.08);
+  --dv-paneview-header-border-color: rgba(0, 0, 0, 0.08);
+  --dv-tab-divider-color: transparent;
+
+  --dv-sash-color: transparent;
+  --dv-active-sash-color: #0a84ff;
+
+  --dv-drag-over-background-color: rgba(10, 132, 255, 0.12);
+  --dv-drag-over-border-color: #0a84ff;
+  --dv-drag-over-border: 1px solid #0a84ff;
+
+  --dv-dnd-compass-color: rgba(255, 255, 255, 0.92);
+  --dv-dnd-compass-cell-color: rgba(10, 132, 255, 0.18);
+  --dv-dnd-compass-active-cell-color: #0a84ff;
+  --dv-dnd-compass-edge-cell-color: rgba(10, 132, 255, 0.32);
+  --dv-edge-dock-indicator-color: #0a84ff;
+  --dv-smart-guides-color: #0a84ff;
+  --dv-smart-guides-preview-color: rgba(10, 132, 255, 0.35);
+
+  --dv-floating-titlebar-background-color: rgba(245, 245, 247, 0.85);
+  --dv-floating-titlebar-border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  --dv-floating-border: 1px solid rgba(0, 0, 0, 0.12);
+  --dv-floating-group-border: 1px solid rgba(0, 0, 0, 0.12);
+  --dv-floating-box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06), 0 12px 32px rgba(0, 0, 0, 0.16);
+  --dv-floating-group-dragging-opacity: 0.85;
+
+  --dv-context-menu-background-color: rgba(255, 255, 255, 0.92);
+  --dv-context-menu-color: #1d1d1f;
+  --dv-icon-hover-background-color: rgba(0, 0, 0, 0.06);
+  --dv-scrollbar-background-color: rgba(0, 0, 0, 0.18);
+  --dv-tabs-container-scrollbar-color: rgba(0, 0, 0, 0.18);
+  --dv-paneview-active-outline-color: #0a84ff;
+  --dv-tab-group-color: #0a84ff;
+}
+
+.dark .wms-dock {
+  --dv-group-view-background-color: #1c1c1e;
+  --dv-tabs-and-actions-container-background-color: #000000;
+
+  --dv-activegroup-visiblepanel-tab-background-color: #1c1c1e;
+  --dv-activegroup-visiblepanel-tab-color: #f5f5f7;
+  --dv-activegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-activegroup-hiddenpanel-tab-color: rgba(235, 235, 245, 0.6);
+  --dv-inactivegroup-visiblepanel-tab-background-color: rgba(28, 28, 30, 0.6);
+  --dv-inactivegroup-visiblepanel-tab-color: rgba(235, 235, 245, 0.6);
+  --dv-inactivegroup-hiddenpanel-tab-background-color: transparent;
+  --dv-inactivegroup-hiddenpanel-tab-color: rgba(235, 235, 245, 0.4);
+
+  --dv-separator-border: rgba(255, 255, 255, 0.08);
+  --dv-paneview-header-border-color: rgba(255, 255, 255, 0.08);
+
+  --dv-drag-over-background-color: rgba(10, 132, 255, 0.2);
+
+  --dv-dnd-compass-color: rgba(28, 28, 30, 0.95);
+  --dv-dnd-compass-cell-color: rgba(10, 132, 255, 0.22);
+
+  --dv-floating-titlebar-background-color: rgba(28, 28, 30, 0.9);
+  --dv-floating-titlebar-border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  --dv-floating-border: 1px solid rgba(255, 255, 255, 0.14);
+  --dv-floating-group-border: 1px solid rgba(255, 255, 255, 0.14);
+  --dv-floating-box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.5), 0 12px 32px rgba(0, 0, 0, 0.6);
+
+  --dv-context-menu-background-color: rgba(28, 28, 30, 0.95);
+  --dv-context-menu-color: #f5f5f7;
+  --dv-icon-hover-background-color: rgba(255, 255, 255, 0.1);
+  --dv-scrollbar-background-color: rgba(255, 255, 255, 0.22);
+  --dv-tabs-container-scrollbar-color: rgba(255, 255, 255, 0.22);
+}
+
+/* ------------------------------------------------------------------ */
+/* Structural overrides: things dockview hardcodes that no variable reaches. */
+/* ------------------------------------------------------------------ */
+
+.wms-dock {
+  font-family: inherit;
+  height: 100%;
+}
+
+/* Tabs: pill-shaped with a soft hover, rather than square VS-Code tabs. */
+.wms-dock .dv-tab {
+  border-radius: var(--dv-tab-border-radius);
+  padding: 0 10px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition:
+    background-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wms-dock .dv-tab:hover {
+  background-color: rgba(0, 0, 0, 0.04);
+}
+
+.dark .wms-dock .dv-tab:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Keyboard focus must stay visible — this is an accessibility requirement
+   carried over from Document 1, and dockview does not provide it. */
+.wms-dock .dv-tab:focus-visible {
+  outline: 2px solid #0a84ff;
+  outline-offset: -2px;
+}
+
+/* The group container gets the same hairline + radius as our Panel primitive,
+   so a docked panel and a floating Panel look like the same object. */
+.wms-dock .dv-groupview {
+  border-radius: var(--dv-border-radius);
+  overflow: hidden;
+}
+
+.wms-dock .dv-void-container,
+.wms-dock .dv-tabs-and-actions-container {
+  border-bottom: 1px solid var(--dv-separator-border);
+}
+
+/* Sashes are invisible until hovered, then bloom to the accent colour.
+   Default dockview shows a permanent grey bar, which reads as clutter. */
+.wms-dock .dv-sash {
+  transition: background-color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wms-dock .dv-sash:hover,
+.wms-dock .dv-sash.dv-active {
+  background-color: var(--dv-active-sash-color);
+}
+
+/* Floating panels get the elevated-surface treatment. */
+.wms-dock .dv-resize-container {
+  border-radius: 12px;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.wms-dock .dv-drop-target-container,
+.wms-dock .dv-drop-target-selection {
+  border-radius: 8px;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Respect the OS reduced-motion preference everywhere, including the library. */
+@media (prefers-reduced-motion: reduce) {
+  .wms-dock,
+  .wms-dock * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

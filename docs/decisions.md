@@ -417,3 +417,100 @@ of latest write`, `[3] reserved`. Single writer, single reader, `Atomics` for th
 index publish — no locks, and a reader that falls behind drops frames rather than
 stalling the producer, which is the correct trade for live preview. Frame ring 4–6
 slots, pose ring 3, rig ring 3.
+
+# UI shell
+
+## Docking library: `dockview`
+
+The editor shell needs panels a user can drag, float, tab, resize and close —
+Blender/Resolve/Unity behaviour, not a CSS grid with resizable gutters. We use
+**`dockview`** (MIT, v8.3.1).
+
+Rejected alternatives:
+
+| Library | Why not |
+| --- | --- |
+| `react-mosaic` | Binary-split trees only. No floating windows and no tab groups, so "drag Properties on top of Timeline to tab them" is unimplementable. |
+| `golden-layout` | The most feature-complete option, but jQuery-era architecture with a bolted-on React wrapper, and its own DOM/lifecycle assumptions fight React 18 StrictMode. |
+| `rc-dock` | Genuinely viable and the fallback if `dockview` disappoints. Smaller community, and its styling hooks are less amenable to a full reskin. |
+
+`dockview` wins on serialisable layout state (`toJSON`/`fromJSON` is exactly the
+shape §A.6 persistence needs), real floating groups, first-class TypeScript, and
+a DOM structure plain enough to restyle completely.
+
+### Containment
+
+Every `dockview` import lives under `packages/ui/src/dock/`. The rest of the app
+talks to `DockRoot`, `PanelRegistry` and the `DockController` returned by
+`useDockApi` — none of which leak a `dockview` type. Swapping to `rc-dock` would
+be a rewrite of four files, not of the application.
+
+### Reskin
+
+The built-in `dockview-theme-*` stylesheets are **not used**. They look like
+VS Code, and an app that half-looks-like-VS-Code and half-looks-like-macOS looks
+like neither. `packages/ui/src/dock/theme.css` restyles the primitives under a
+single `.wms-dock` root using our existing design tokens: 8px radii, hairline
+borders, `ease-apple-out` transitions, the SF-adjacent type ramp, and our accent
+colour for the active tab. This was treated as core work, not polish — the
+docking system is the most visible surface in the app.
+
+## No router
+
+There are no pages and no route navigation. The entire application is one
+component tree: menu bar, toolbar, dock, status bar. Anything that would have
+been a page is a panel.
+
+This deletes three things from Documents 1–2: the full-page Workspace Picker
+(now the Workspace Browser panel's empty state), the two-column live view (now
+two independently dockable panels), and the disabled sidebar nav stub. A
+navigation affordance that navigates nowhere is worse than no affordance.
+
+## Layout persistence
+
+Per **workspace tab**, not per app: `{ version, layouts: { [tabId]: blob } }`.
+Live and Edit are different arrangements for different work, and sharing one
+layout between them would make each tab switch feel like the app forgot itself.
+
+Storage is tiered, mirroring the workspace provider tiers:
+`layout.json` in the workspace folder → `localStorage` (`wms-layout-v1`) →
+registry default. When a workspace folder is chosen and holds no layout yet, the
+`localStorage` copy is migrated into it, so picking a folder never appears to
+reset the user's arrangement.
+
+Writes are debounced 500ms and flushed on `pagehide`/`visibilitychange`. A drag
+fires layout-change events continuously; without the debounce a single panel
+resize would issue dozens of writes to the filesystem.
+
+Any failure to restore falls back to the default layout rather than propagating.
+A corrupt layout file must never produce an app that will not open.
+
+## Menu keyboard model
+
+Menus follow the WAI-ARIA menubar pattern with **roving `aria-activedescendant`**
+rather than moving real DOM focus per item. Focus stays on the list element; the
+highlight is a virtual cursor. This keeps one keydown handler authoritative and
+avoids focus thrash on every arrow press. Pinned by
+`packages/ui/src/menu/Menu.test.tsx`.
+
+## Viewport is imperative, not react-three-fiber
+
+`RigScene` is a plain class owning its renderer, scene and animation loop. The
+60fps loop reads pose data straight from the ring buffer with zero per-frame
+allocation; routing that through React reconciliation would add a render pass per
+frame to redraw nothing React can see.
+
+Two consequences shaped the shell:
+
+1. The panel component creates the scene in an empty-dependency effect and pushes
+   toggle changes imperatively. The `components` map handed to `dockview` is
+   memoised on the registry, because a new object identity makes `dockview`
+   recreate panels — which for the viewport means destroying a WebGL context.
+2. Inactive workspace tabs are hidden with `visibility`, not unmounted. Unmounting
+   would lose the GL context on every tab switch. `display: none` is also wrong:
+   it gives the canvas a 0×0 layout box, and `dockview` would then restore a
+   layout computed at zero size.
+
+The navigation gizmo is drawn as a **scissored second pass in the same GL
+context** rather than as a second renderer, for the same reason: WebGL contexts
+are a scarce per-page resource and browsers evict the oldest when the limit is hit.

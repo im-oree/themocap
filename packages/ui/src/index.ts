@@ -28,3 +28,39 @@ export { Toaster, toast, useToastStore, type Toast } from './components/Toast';
 export { ThemeToggle } from './components/ThemeToggle';
 export { PerfHUD } from './dev/PerfHUD';
 export * from './icons';
+
+// ---- Menus (addendum §A.3, §B.4) ----
+export { MenuBar, Menu, type MenuProps, type MenuItemSpec } from './menu/Menu';
+export {
+  ContextMenu,
+  useContextMenu,
+  type ContextMenuProps,
+  type ContextMenuState,
+} from './menu/ContextMenu';
+
+// ---- Docking system (addendum §A.2) ----
+export { DockRoot, type DockRootProps } from './dock/DockRoot';
+export {
+  PanelRegistry,
+  type PanelDescriptor,
+  type PanelLocation,
+  type DockPanelComponentProps,
+} from './dock/panelRegistry';
+export {
+  applyDefaultLayout,
+  openPanelAtDefaultLocation,
+  type ApplyDefaultLayoutOptions,
+} from './dock/defaultLayout';
+export {
+  LayoutStore,
+  debounceLayoutSave,
+  parseStoredLayouts,
+  LAYOUT_STORAGE_KEY,
+  LAYOUT_SCHEMA_VERSION,
+  LAYOUT_FILE,
+  type SerializedLayout,
+  type StoredLayouts,
+  type LayoutStorageBackend,
+} from './dock/layoutPersistence';
+export { useDockApi, type DockController } from './dock/useDockApi';
+export { Spinner, type SpinnerProps } from './components/Spinner';

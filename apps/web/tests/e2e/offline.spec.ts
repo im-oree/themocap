@@ -19,7 +19,7 @@ test.describe('offline guard', () => {
     page.on('pageerror', (error) => consoleErrors.push(error.message));
 
     await page.goto('/');
-    await expect(page.getByRole('heading', { name: 'Foundation ready' })).toBeVisible();
+    await expect(page.getByTestId('status-bar')).toBeVisible();
     await page.waitForLoadState('networkidle');
 
     expect(external, `Unexpected remote requests:\n${external.join('\n')}`).toEqual([]);

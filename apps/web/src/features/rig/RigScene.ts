@@ -667,11 +667,48 @@ export class RigScene {
     return this.renderer.info.render.calls;
   }
 
+  /**
+   * Tears down `TransformControls`, working around an upstream three.js bug.
+   *
+   * As of three 0.169 `TransformControls extends Controls`, not `Object3D` —
+   * the visual gizmo was split out into a separate helper object. But its own
+   * `dispose()` still calls `this.traverse(...)`, an `Object3D` method that no
+   * longer exists, so it throws `this.traverse is not a function`.
+   *
+   * That throw is unusually destructive here. React StrictMode deliberately
+   * mounts, unmounts and remounts every effect in development, so this fires on
+   * the *first* page load. Because it escapes during the commit phase, React
+   * unwinds the whole tree and the entire app renders as a blank page — the
+   * viewport failing takes the menu bar and every other panel down with it.
+   *
+   * So we do what the library's `dispose()` meant to do: disconnect the input
+   * listeners, then traverse the *helper* (which is a real `Object3D`) and free
+   * its geometries and materials.
+   */
+  private disposeTransformControls(): void {
+    try {
+      this.transformControls.detach();
+      this.transformControls.disconnect();
+    } catch {
+      // Already detached/disconnected — nothing to unwind.
+    }
+
+    this.transformHelper.traverse((object) => {
+      const mesh = object as THREE.Mesh;
+      mesh.geometry?.dispose();
+      const material = mesh.material as THREE.Material | THREE.Material[] | undefined;
+      if (Array.isArray(material)) material.forEach((m) => m.dispose());
+      else material?.dispose();
+    });
+
+    this.transformHelper.removeFromParent();
+  }
+
   dispose(): void {
     if (this.disposed) return;
     this.disposed = true;
     this.controls.dispose();
-    this.transformControls.dispose();
+    this.disposeTransformControls();
     this.scene.traverse((object) => {
       const mesh = object as THREE.Mesh;
       if (mesh.geometry) mesh.geometry.dispose();

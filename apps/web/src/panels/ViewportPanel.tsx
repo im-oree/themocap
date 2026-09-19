@@ -130,7 +130,14 @@ export function ViewportPanel() {
       observer.disconnect();
       canvas.removeEventListener('webglcontextlost', onContextLost);
       canvas.removeEventListener('webglcontextrestored', onContextRestored);
-      scene.dispose();
+      // Teardown must never throw into React's commit phase: an error escaping
+      // here unwinds the whole tree and blanks the entire app, not just this
+      // panel. Releasing GPU resources is best-effort by nature.
+      try {
+        scene.dispose();
+      } catch (error) {
+        console.error('[viewport] scene teardown failed', error);
+      }
       sceneRef.current = null;
     };
   }, []);

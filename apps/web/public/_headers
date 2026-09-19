@@ -1,7 +1,12 @@
 # Static-host header config (Netlify/Cloudflare Pages syntax).
-# These two headers are REQUIRED: without cross-origin isolation there is no
+# COOP + COEP are REQUIRED: without cross-origin isolation there is no
 # SharedArrayBuffer, and therefore no threaded WASM inference.
+#
+# CORP is intentionally `cross-origin`. It controls who may embed a resource,
+# and `same-origin` on the top-level document makes the app unloadable inside
+# any cross-origin iframe (preview proxies, docs embeds) — a silent blank frame
+# with no console error. Isolation comes from COOP + COEP, not from this header.
 /*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: require-corp
-  Cross-Origin-Resource-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin

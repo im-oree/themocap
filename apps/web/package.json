@@ -14,10 +14,10 @@
   },
   "dependencies": {
     "@wms/inference": "workspace:*",
+    "@wms/mocap-core-wasm": "workspace:*",
     "@wms/models": "workspace:*",
     "@wms/skeleton": "workspace:*",
     "@wms/ui": "workspace:*",
-    "@wms/mocap-core-wasm": "workspace:*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "zustand": "^4.5.4"
@@ -25,19 +25,20 @@
   "devDependencies": {
     "@fontsource/inter": "^5.0.20",
     "@playwright/test": "^1.45.3",
+    "@testing-library/jest-dom": "^6.4.8",
+    "@testing-library/react": "^16.0.0",
+    "@testing-library/user-event": "^14.5.2",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "autoprefixer": "^10.4.19",
+    "fake-indexeddb": "^6.2.5",
+    "jsdom": "^24.1.1",
     "postcss": "^8.4.39",
     "tailwindcss": "^3.4.6",
     "typescript": "^5.5.3",
     "vite": "^5.3.4",
     "vite-plugin-pwa": "^0.20.1",
-    "vitest": "^2.0.3",
-    "@testing-library/react": "^16.0.0",
-    "@testing-library/user-event": "^14.5.2",
-    "@testing-library/jest-dom": "^6.4.8",
-    "jsdom": "^24.1.1"
+    "vitest": "^2.0.3"
   }
 }

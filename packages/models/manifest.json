@@ -504,6 +504,42 @@
       "notes": "Single-person, 17 COCO keypoints, no separate detector needed. Input is uint8 NHWC with NO mean/std normalisation, unlike the RTMPose entries. Output is [1,1,17,3] as (y, x, score) with y/x normalised 0..1 - note the Y-FIRST ordering, the opposite of RTMPose. Chosen as the first live-path model because it is a single self-contained 9.41 MB file."
     },
     {
+      "id": "movenet-singlepose-lightning-stub",
+      "displayName": "MoveNet Lightning (SYNTHETIC placeholder)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp32",
+      "file": "/models/movenet-singlepose-lightning.stub.onnx",
+      "acquired": true,
+      "sha256": "30d9d3c3cd4dd05900bf88cd91a17bfb66d2ce06bf76b954149502e861f83fb5",
+      "sizeBytes": 1203,
+      "inputName": "input",
+      "inputShape": [
+        1,
+        192,
+        192,
+        3
+      ],
+      "outputNames": [
+        "output_0"
+      ],
+      "preprocessing": {
+        "layout": "nhwc",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "themocap",
+        "ref": "local",
+        "sourceUrl": "tools/models/make_stub_movenet.py",
+        "exportMethod": "Generated locally by tools/models/make_stub_movenet.py. NOT a trained model.",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "SYNTHETIC. Real ONNX graph with MoveNet's exact I/O signature, but it does NOT estimate pose - it emits a deterministic skeleton that sways with mean image brightness so pipeline faults (stuck frames, stalled ring buffer, wrong decode offsets) stay visible. Exists only because no model host is reachable from the build agent (docs/decisions.md). Carries producer_name 'themocap-stub'; the UI must label any take recorded with it as synthetic."
+    },
+    {
       "id": "motionbert-lite-fp16",
       "displayName": "MotionBERT Lite (fp16)",
       "task": "lift-3d",

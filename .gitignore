@@ -24,3 +24,9 @@ tools/bench/public/fixtures/
 # A stray lockfile here means someone ran the wrong package manager.
 package-lock.json
 yarn.lock
+
+# Real model weights are supplied out-of-band and are never committed (size +
+# license). The generated synthetic placeholder IS committed, so a fresh clone
+# can run the pipeline without network access.
+apps/web/public/models/*.onnx
+!apps/web/public/models/*.stub.onnx

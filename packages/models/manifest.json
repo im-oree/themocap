@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-09-19",
+  "updated": "2026-09-20",
   "models": [
     {
       "id": "rtmdet-nano-fp32",
@@ -13,8 +13,16 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 320, 320],
-      "outputNames": ["dets", "labels"],
+      "inputShape": [
+        1,
+        3,
+        320,
+        320
+      ],
+      "outputNames": [
+        "dets",
+        "labels"
+      ],
       "preprocessing": {
         "layout": "nchw",
         "colorOrder": "rgb",
@@ -42,8 +50,16 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 320, 320],
-      "outputNames": ["dets", "labels"],
+      "inputShape": [
+        1,
+        3,
+        320,
+        320
+      ],
+      "outputNames": [
+        "dets",
+        "labels"
+      ],
       "preprocessing": {
         "layout": "nchw",
         "colorOrder": "rgb",
@@ -71,8 +87,16 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 320, 320],
-      "outputNames": ["dets", "labels"],
+      "inputShape": [
+        1,
+        3,
+        320,
+        320
+      ],
+      "outputNames": [
+        "dets",
+        "labels"
+      ],
       "preprocessing": {
         "layout": "nchw",
         "colorOrder": "rgb",
@@ -100,8 +124,15 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "images",
-      "inputShape": [1, 3, 416, 416],
-      "outputNames": ["output"],
+      "inputShape": [
+        1,
+        3,
+        416,
+        416
+      ],
+      "outputNames": [
+        "output"
+      ],
       "preprocessing": {
         "layout": "nchw",
         "colorOrder": "rgb",
@@ -129,11 +160,27 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 256, 192],
-      "outputNames": ["simcc_x", "simcc_y"],
+      "inputShape": [
+        1,
+        3,
+        256,
+        192
+      ],
+      "outputNames": [
+        "simcc_x",
+        "simcc_y"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -160,11 +207,27 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 256, 192],
-      "outputNames": ["simcc_x", "simcc_y"],
+      "inputShape": [
+        1,
+        3,
+        256,
+        192
+      ],
+      "outputNames": [
+        "simcc_x",
+        "simcc_y"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -191,11 +254,27 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 256, 192],
-      "outputNames": ["simcc_x", "simcc_y"],
+      "inputShape": [
+        1,
+        3,
+        256,
+        192
+      ],
+      "outputNames": [
+        "simcc_x",
+        "simcc_y"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -222,11 +301,27 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 384, 288],
-      "outputNames": ["simcc_x", "simcc_y"],
+      "inputShape": [
+        1,
+        3,
+        384,
+        288
+      ],
+      "outputNames": [
+        "simcc_x",
+        "simcc_y"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -253,11 +348,26 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 256, 192],
-      "outputNames": ["heatmaps"],
+      "inputShape": [
+        1,
+        3,
+        256,
+        192
+      ],
+      "outputNames": [
+        "heatmaps"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -284,11 +394,27 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 3, 384, 288],
-      "outputNames": ["simcc_x", "simcc_y"],
+      "inputShape": [
+        1,
+        3,
+        384,
+        288
+      ],
+      "outputNames": [
+        "simcc_x",
+        "simcc_y"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -315,8 +441,16 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input_1",
-      "inputShape": [1, 256, 256, 3],
-      "outputNames": ["Identity", "Identity_1"],
+      "inputShape": [
+        1,
+        256,
+        256,
+        3
+      ],
+      "outputNames": [
+        "Identity",
+        "Identity_1"
+      ],
       "preprocessing": {
         "layout": "nhwc",
         "colorOrder": "rgb",
@@ -334,6 +468,42 @@
       "notes": "Bundled locally; also provides 3D world landmarks (see blazepose-3d-world)."
     },
     {
+      "id": "movenet-singlepose-lightning-fp32",
+      "displayName": "MoveNet SinglePose Lightning (fp32)",
+      "task": "pose-2d",
+      "stage": "bench-candidate",
+      "precision": "fp32",
+      "file": "/models/movenet-singlepose-lightning.onnx",
+      "acquired": false,
+      "sha256": null,
+      "sizeBytes": null,
+      "inputName": "input",
+      "inputShape": [
+        1,
+        192,
+        192,
+        3
+      ],
+      "outputNames": [
+        "output_0"
+      ],
+      "preprocessing": {
+        "layout": "nhwc",
+        "colorOrder": "rgb",
+        "letterbox": true
+      },
+      "provenance": {
+        "repo": "Xenova/movenet-singlepose-lightning",
+        "ref": "main",
+        "sourceUrl": "https://huggingface.co/Xenova/movenet-singlepose-lightning",
+        "exportMethod": "Pre-exported ONNX published on the Hugging Face hub (onnx/model.onnx, 9.41 MB); originally google/movenet/singlepose/lightning/4",
+        "license": "Apache-2.0",
+        "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+        "licenseVerified": true
+      },
+      "notes": "Single-person, 17 COCO keypoints, no separate detector needed. Input is uint8 NHWC with NO mean/std normalisation, unlike the RTMPose entries. Output is [1,1,17,3] as (y, x, score) with y/x normalised 0..1 - note the Y-FIRST ordering, the opposite of RTMPose. Chosen as the first live-path model because it is a single self-contained 9.41 MB file."
+    },
+    {
       "id": "motionbert-lite-fp16",
       "displayName": "MotionBERT Lite (fp16)",
       "task": "lift-3d",
@@ -344,8 +514,15 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input",
-      "inputShape": [1, 243, 17, 3],
-      "outputNames": ["output"],
+      "inputShape": [
+        1,
+        243,
+        17,
+        3
+      ],
+      "outputNames": [
+        "output"
+      ],
       "provenance": {
         "repo": "Walter0807/MotionBERT",
         "ref": "main",
@@ -368,8 +545,15 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "input_1",
-      "inputShape": [1, 256, 256, 3],
-      "outputNames": ["Identity_4"],
+      "inputShape": [
+        1,
+        256,
+        256,
+        3
+      ],
+      "outputNames": [
+        "Identity_4"
+      ],
       "preprocessing": {
         "layout": "nhwc",
         "colorOrder": "rgb",
@@ -397,11 +581,26 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "image",
-      "inputShape": [1, 3, 518, 518],
-      "outputNames": ["depth"],
+      "inputShape": [
+        1,
+        3,
+        518,
+        518
+      ],
+      "outputNames": [
+        "depth"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true
@@ -428,11 +627,26 @@
       "sha256": null,
       "sizeBytes": null,
       "inputName": "image",
-      "inputShape": [1, 3, 518, 518],
-      "outputNames": ["depth"],
+      "inputShape": [
+        1,
+        3,
+        518,
+        518
+      ],
+      "outputNames": [
+        "depth"
+      ],
       "preprocessing": {
-        "mean": [123.675, 116.28, 103.53],
-        "std": [58.395, 57.12, 57.375],
+        "mean": [
+          123.675,
+          116.28,
+          103.53
+        ],
+        "std": [
+          58.395,
+          57.12,
+          57.375
+        ],
         "layout": "nchw",
         "colorOrder": "rgb",
         "letterbox": true

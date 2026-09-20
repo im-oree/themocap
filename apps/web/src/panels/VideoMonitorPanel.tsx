@@ -17,12 +17,17 @@ import { cn } from '@wms/ui';
 import { useLiveStore } from '../state/useLiveStore';
 import { subscribeToSource } from '../features/capture/sourceController';
 import type { AcquiredSource } from '../features/capture/mediaSource';
+import { captureSession } from '../features/capture/captureSession';
+import { COCO17_EDGES, containRect, drawSkeleton } from '../features/capture/drawSkeleton';
+import type { Keypoint } from '../features/capture/movenet';
 
 export function VideoMonitorPanel() {
   const hostRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const overlayRef = useRef<HTMLCanvasElement>(null);
   const [box, setBox] = useState({ width: 0, height: 0 });
+  const [captureError, setCaptureError] = useState<string | null>(null);
+  const hasSource = useLiveStore((s) => s.source.kind !== 'none');
 
   const source = useLiveStore((s) => s.source);
   const frameIndex = useLiveStore((s) => s.frameIndex);
@@ -95,15 +100,76 @@ export function VideoMonitorPanel() {
     return () => observer.disconnect();
   }, []);
 
+  // `hasSource` is in the deps because the <canvas> is unmounted with the video:
+  // a remounted canvas is a brand-new element back at the HTML default 300x150,
+  // and CSS-stretching that to the panel distorts everything drawn on it.
   useEffect(() => {
     const canvas = overlayRef.current;
     if (!canvas || box.width === 0) return;
     const dpr = Math.min(window.devicePixelRatio ?? 1, 2);
     canvas.width = Math.round(box.width * dpr);
     canvas.height = Math.round(box.height * dpr);
-  }, [box]);
+  }, [box, hasSource]);
 
-  const hasSource = source.kind !== 'none';
+  /**
+   * Runs inference for as long as a source is attached.
+   *
+   * Keypoints are painted straight onto the overlay canvas from the callback
+   * rather than being pushed through React state: at 30fps a setState per frame
+   * is 30 reconciliations a second to redraw a canvas React cannot see.
+   */
+  useEffect(() => {
+    if (!hasSource) return;
+    const video = videoRef.current;
+    if (!video) return;
+
+    let cancelled = false;
+    let latest: Keypoint[] | null = null;
+
+    const paint = () => {
+      const canvas = overlayRef.current;
+      const ctx = canvas?.getContext('2d');
+      if (!canvas || !ctx) return;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (!latest) return;
+
+      // Keypoints are normalised to the *source frame*, but the video is drawn
+      // with object-contain, so it occupies only part of the panel. Painting
+      // across the full canvas would slide the skeleton off the body on any
+      // panel whose aspect ratio differs from the camera's.
+      const rect = containRect(
+        video.videoWidth || 0,
+        video.videoHeight || 0,
+        canvas.width,
+        canvas.height,
+      );
+      if (!rect) return;
+      ctx.save();
+      ctx.translate(rect.x, rect.y);
+      drawSkeleton(ctx, latest, rect.width, rect.height, COCO17_EDGES);
+      ctx.restore();
+    };
+
+    void captureSession
+      .start(video, {
+        onFrame: (frame) => {
+          if (cancelled) return;
+          latest = frame.keypoints;
+          paint();
+        },
+        onError: (cause) => console.warn('[capture] frame failed', cause),
+      })
+      .catch((cause) => {
+        // A missing model is expected until one is installed; surface it in the
+        // panel's own empty state rather than as a crash.
+        if (!cancelled) setCaptureError(cause instanceof Error ? cause.message : String(cause));
+      });
+
+    return () => {
+      cancelled = true;
+      void captureSession.stop();
+    };
+  }, [hasSource]);
 
   return (
     <div
@@ -131,6 +197,23 @@ export function VideoMonitorPanel() {
           >
             {String(frameIndex).padStart(6, '0')}
           </div>
+          {captureError && (
+            <p
+              role="alert"
+              data-testid="capture-error"
+              className="absolute inset-x-2 bottom-2 rounded-md bg-danger/90 px-2 py-1.5 text-[11px] leading-snug text-white"
+            >
+              {captureError}
+            </p>
+          )}
+          {captureSession.usingSyntheticModel && !captureError && (
+            <p
+              data-testid="synthetic-model-badge"
+              className="absolute left-2 top-2 rounded-md bg-warning/90 px-2 py-1 text-[10px] font-medium text-black"
+            >
+              Synthetic model — not real pose data
+            </p>
+          )}
         </>
       ) : (
         <EmptyState permission={permission} />

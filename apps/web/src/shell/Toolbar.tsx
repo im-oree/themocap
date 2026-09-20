@@ -39,6 +39,9 @@ import { formatElapsed, useLiveStore } from '../state/useLiveStore';
 import { useAppStore } from '../state/useAppStore';
 import { listCameras, CaptureError } from '../features/capture/mediaSource';
 import { closeSource, selectCamera, selectVideoFile } from '../features/capture/sourceController';
+import { captureSession } from '../features/capture/captureSession';
+import { useTakeStore } from '../state/useTakeStore';
+import { useWorkspaceStore } from '../state/useWorkspaceStore';
 
 /**
  * The shared `IconButton` is sized for touch (44px). A 44px control does not fit
@@ -124,10 +127,55 @@ export function AppToolbar({ dock }: AppToolbarProps) {
     [dock, hasSource, reportCaptureError, sourceMenu],
   );
 
-  const toggleRecording = () => {
-    if (isRecording) setRecording({ status: 'saving' });
-    else setRecording({ status: 'recording', startedAt: performance.now(), elapsedSeconds: 0 });
-  };
+  /**
+   * Starts or stops a recording, writing a real take to the workspace.
+   *
+   * Recording needs somewhere to put the result, so a workspace must be chosen
+   * first; a project is created on demand rather than making the user go and
+   * set one up before they can press Record.
+   */
+  const toggleRecording = useCallback(async () => {
+    const manager = useWorkspaceStore.getState().manager;
+    if (!manager) {
+      toast({
+        title: 'Choose a workspace first',
+        description: 'Pick where recordings are saved in the Workspace panel, then record.',
+        tone: 'warning',
+      });
+      return;
+    }
+
+    try {
+      if (isRecording) {
+        const saved = await captureSession.stopRecording(manager);
+        if (saved) {
+          await useTakeStore.getState().loadProjects(manager);
+          toast({
+            title: 'Take saved',
+            description: `${saved.frameCount} frames, ${saved.durationSeconds.toFixed(1)}s`,
+            tone: 'success',
+          });
+        } else {
+          toast({
+            title: 'Nothing recorded',
+            description: 'No frames were captured, so no take was saved.',
+            tone: 'warning',
+          });
+        }
+      } else {
+        const project = await manager.ensureProject('Recordings');
+        const takeName = new Date().toISOString().slice(0, 19).replace('T', ' ');
+        await captureSession.startRecording(manager, project.id, takeName);
+      }
+    } catch (cause) {
+      setRecording({ status: 'idle' });
+      toast({
+        title: isRecording ? 'Could not save take' : 'Could not start recording',
+        description: cause instanceof Error ? cause.message : String(cause),
+        tone: 'danger',
+      });
+    }
+  }, [isRecording, setRecording]);
 
   return (
     <div
@@ -215,7 +263,7 @@ export function AppToolbar({ dock }: AppToolbarProps) {
         data-testid="record-button"
         disabled={!hasSource || recording.status === 'saving'}
         aria-pressed={isRecording}
-        onClick={toggleRecording}
+        onClick={() => void toggleRecording()}
         className={cn(
           'flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[12px] font-medium',
           'transition-colors duration-150 ease-apple-out',

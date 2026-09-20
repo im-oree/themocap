@@ -16,6 +16,7 @@ import {
   keypointsToChannels,
   rgbaToUint8Nhwc,
 } from '../../src/features/capture/movenet';
+import { containRect } from '../../src/features/capture/drawSkeleton';
 
 /** Builds a `[1,1,17,3]` output buffer from (y, x, score) triples. */
 function buildOutput(points: [number, number, number][]): Float32Array {
@@ -178,5 +179,33 @@ describe('keypointsToChannels', () => {
     const { kp2d, conf } = keypointsToChannels(kps);
     expect(kp2d.length).toBe(34);
     expect(conf.length).toBe(17);
+  });
+});
+
+describe('containRect (overlay alignment)', () => {
+  it('letterboxes a 16:9 source inside a square box', () => {
+    const r = containRect(1280, 720, 400, 400)!;
+    expect(r.width).toBeCloseTo(400, 5);
+    expect(r.height).toBeCloseTo(225, 5);
+    expect(r.x).toBeCloseTo(0, 5);
+    expect(r.y).toBeCloseTo(87.5, 5);
+  });
+
+  it('pillarboxes a portrait source inside a landscape box', () => {
+    const r = containRect(720, 1280, 800, 400)!;
+    expect(r.height).toBeCloseTo(400, 5);
+    expect(r.width).toBeCloseTo(225, 5);
+    expect(r.y).toBeCloseTo(0, 5);
+    expect(r.x).toBeCloseTo(287.5, 5);
+  });
+
+  it('fills exactly when aspect ratios match', () => {
+    const r = containRect(1280, 720, 640, 360)!;
+    expect(r).toEqual({ x: 0, y: 0, width: 640, height: 360 });
+  });
+
+  it('returns null for degenerate inputs rather than dividing by zero', () => {
+    expect(containRect(0, 0, 100, 100)).toBeNull();
+    expect(containRect(100, 100, 0, 0)).toBeNull();
   });
 });

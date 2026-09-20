@@ -604,3 +604,48 @@ takes"), and are suppressed by some browsers after repeated use — which would
 silently turn Delete into a no-op. `Dialog`/`PromptDialog` replace them, with
 explicit focus trapping, Escape handling and focus restore, each individually
 tested.
+
+## Model acquisition: what is reachable from a sandboxed build agent
+
+Recorded because this was probed exhaustively and should not be re-litigated.
+
+**Reachable**: `registry.npmjs.org`, `pypi.org` + `files.pythonhosted.org`
+(86 MB/s), `github.com` HTML and the GitHub API.
+
+**Blocked** (TCP connects, then the TLS handshake is killed — a deliberate
+egress policy, not a DNS or routing fault):
+
+| Host | Why it mattered |
+|---|---|
+| `huggingface.co`, `cdn-lfs*.hf.co` | Every pre-exported ONNX pose model |
+| `hf-mirror.com`, `modelscope.cn`, `gitee.com` | HF mirrors |
+| `download.openmmlab.com` | RTMPose/RTMDet official ONNX SDK zips |
+| `release-assets.githubusercontent.com` | **All** GitHub release-asset binaries |
+| `raw.githubusercontent.com`, `media.githubusercontent.com` | Raw repo files |
+| `cdn.jsdelivr.net`, `unpkg.com` | npm CDNs |
+| `storage.googleapis.com`, `tfhub.dev`, `kaggle.com` | MoveNet's origin |
+| `download.pytorch.org` | Torch checkpoints |
+
+GitHub *issues* release redirects (HTTP 302) but the asset CDN they point at is
+blocked, so a release URL returning 302 is not evidence the file is obtainable.
+
+**Consequence.** No pre-trained model weights of any kind can be fetched by the
+build agent. Packages that *reference* models (`mediapipe`, `ultralytics`,
+`rtmlib`) ship code only and download weights at runtime from the blocked hosts.
+The one package found bundling real pose weights, `@vladmandic/human`, ships
+**TFJS shards, not ONNX** — adopting it would mean a second inference runtime
+alongside ONNX Runtime, which is rejected.
+
+**What the agent can still do**, and therefore how this phase is structured:
+
+- `onnx` and `numpy` install fine from PyPI, so a valid `.onnx` file can be
+  *authored* locally. That is enough to build and test the plumbing — session
+  creation, tensor shapes, I/O binding, the worker protocol — against a
+  synthetic model with MoveNet's exact signature.
+- All model-dependent geometry is therefore written as pure functions with no
+  onnxruntime import (`features/capture/movenet.ts`), so preprocessing and
+  decoding are fully covered by tests without any weights present.
+- Real weights are supplied out-of-band by a human and dropped into
+  `apps/web/public/models/`. The manifest entry stays `acquired:false` with a
+  null `sha256` until then, and `fetchModel` refuses to load it — an unverified
+  or truncated file must never silently become the thing driving the capture.

@@ -14,10 +14,17 @@
  * readable section attached to the joints it applies to.
  */
 
-import { useMemo } from 'react';
-import { Badge, Button, cn, Slider } from '@wms/ui';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Badge, Button, cn, Slider, toast } from '@wms/ui';
 
 import { hasEstimatedTwist, TWIST_LIMITATION_NOTE } from '../features/rig/rigSkeleton';
+import {
+  installModel,
+  listInstalledModels,
+  removeInstalledModel,
+  type InstalledModel,
+} from '../features/capture/modelStore';
+import { resolveLiveModel } from '../features/capture/captureSession';
 import { ONE_EURO_DEFAULTS, useEditorStore } from '../state/useEditorStore';
 import { useLiveStore } from '../state/useLiveStore';
 import { useSelection } from '../state/useSelection';
@@ -221,6 +228,8 @@ function PreferencesContext() {
 
   return (
     <>
+      <ModelsSection />
+
       <Section title="Workspace">
         <p className="text-[12px] leading-snug text-content-light-primary dark:text-content-dark-primary">
           {description || 'No workspace selected yet.'}
@@ -295,5 +304,117 @@ function JointContext({ jointName }: { jointName: string }) {
         </Section>
       )}
     </>
+  );
+}
+
+/**
+ * "Install models" (Document 3 §C).
+ *
+ * The app ships no real weights — they are large and their licences vary — so
+ * this is how a user supplies their own. Files are copied into OPFS so they
+ * survive reloads and remain available with the network off, which is the
+ * whole premise of the project.
+ */
+function ModelsSection() {
+  const [installed, setInstalled] = useState<InstalledModel[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  const refresh = useCallback(() => {
+    void listInstalledModels()
+      .then(setInstalled)
+      .catch(() => setInstalled([]));
+  }, []);
+
+  useEffect(refresh, [refresh]);
+
+  const onPick = useCallback(
+    async (file: File) => {
+      setBusy(true);
+      setError(null);
+      try {
+        const record = await installModel(file);
+        refresh();
+        toast({
+          title: 'Model installed',
+          description: `${record.name} — ${(record.sizeBytes / 1_048_576).toFixed(1)} MB`,
+          tone: 'success',
+        });
+      } catch (cause) {
+        setError(cause instanceof Error ? cause.message : String(cause));
+      } finally {
+        setBusy(false);
+      }
+    },
+    [refresh],
+  );
+
+  const synthetic = resolveLiveModel()?.synthetic ?? false;
+
+  return (
+    <Section title="Pose models">
+      {synthetic && installed.length === 0 && (
+        <p className="rounded-lg bg-warning/15 px-2 py-1.5 text-[11px] leading-snug text-content-light-primary dark:text-content-dark-primary">
+          Running on the <strong>synthetic placeholder</strong>. It proves the pipeline works but
+          does not track a real body. Install a real model below for actual motion capture.
+        </p>
+      )}
+
+      {installed.length > 0 && (
+        <ul className="flex flex-col gap-1">
+          {installed.map((model) => (
+            <li
+              key={model.name}
+              className="flex items-center justify-between gap-2 rounded-lg border border-hairline-light px-2 py-1.5 dark:border-hairline-dark"
+            >
+              <div className="min-w-0">
+                <p className="truncate font-mono text-[11px] text-content-light-primary dark:text-content-dark-primary">
+                  {model.name}
+                </p>
+                <p className="text-[10px] text-content-light-secondary dark:text-content-dark-secondary">
+                  {(model.sizeBytes / 1_048_576).toFixed(1)} MB · {model.sha256.slice(0, 12)}…
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => void removeInstalledModel(model.name).then(refresh)}
+              >
+                Remove
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {error && (
+        <p role="alert" className="rounded-lg bg-danger/10 px-2 py-1.5 text-[11px] text-danger">
+          {error}
+        </p>
+      )}
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept=".onnx"
+        className="hidden"
+        data-testid="model-file-input"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = '';
+          if (file) void onPick(file);
+        }}
+      />
+      <Button size="sm" variant="secondary" disabled={busy} onClick={() => inputRef.current?.click()}>
+        {busy ? 'Installing…' : 'Install model…'}
+      </Button>
+
+      <p className="text-[10px] leading-snug text-content-light-secondary dark:text-content-dark-secondary">
+        Needs a 2D pose model in ONNX format. MoveNet SinglePose Lightning (9.4 MB, Apache-2.0)
+        is the tested choice. Nothing is uploaded — the file is copied into this browser&rsquo;s
+        private storage and used offline.
+      </p>
+    </Section>
   );
 }

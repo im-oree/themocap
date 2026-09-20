@@ -16,6 +16,7 @@ import type { ModelSpec } from '@wms/inference/types';
 import { manifest } from '@wms/models';
 
 import { getActiveSource } from './sourceController';
+import { installedModelUrl, listInstalledModels } from './modelStore';
 import { CaptureLoop, type CaptureFrame } from './captureLoop';
 import { PoseEstimator, type FrameSource } from './poseEstimator';
 import { MOVENET_KEYPOINTS } from './movenet';
@@ -68,6 +69,34 @@ export function resolveLiveModel(): { spec: ModelSpec; synthetic: boolean } | nu
   return null;
 }
 
+/**
+ * Builds a spec for a user-installed model.
+ *
+ * Served from a blob URL rather than a path, because OPFS is not reachable over
+ * HTTP. The I/O contract is assumed to be MoveNet's, which is what the install
+ * UI asks for; a mismatched model fails at session creation with the runtime's
+ * own shape error, which is clearer than anything we could invent.
+ */
+async function specForInstalled(
+  name: string,
+  sha256: string,
+  sizeBytes: number,
+): Promise<{ spec: ModelSpec; synthetic: boolean }> {
+  return {
+    spec: {
+      id: `installed:${name}`,
+      url: await installedModelUrl(name),
+      sha256,
+      sizeBytes,
+      precision: 'fp32',
+      inputShape: [1, 192, 192, 3],
+      inputName: 'input',
+      outputNames: ['output_0'],
+    },
+    synthetic: false,
+  };
+}
+
 export interface SessionCallbacks {
   onFrame?: (frame: CaptureFrame) => void;
   onError?: (error: unknown) => void;
@@ -114,7 +143,13 @@ class CaptureSession {
   async start(video: FrameSource, callbacks: SessionCallbacks = {}): Promise<void> {
     if (this.loop?.isRunning) return;
 
-    const model = resolveLiveModel();
+    // A user-installed model always wins over the bundled placeholder: if
+    // someone has gone to the trouble of installing real weights, running the
+    // synthetic stub instead would be actively wrong.
+    const installed = await listInstalledModels().catch(() => []);
+    const model = installed.length > 0
+      ? await specForInstalled(installed[0]!.name, installed[0]!.sha256, installed[0]!.sizeBytes)
+      : resolveLiveModel();
     if (!model) throw new NoModelError();
     this.syntheticModel = model.synthetic;
 
